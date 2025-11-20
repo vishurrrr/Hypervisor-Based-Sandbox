@@ -1,0 +1,8 @@
+nohup: ignoring input
+🔒 SafeBox CPU Monitor - Web Server
+📊 Dashboard: http://localhost:5000
+⏹️  Press Ctrl+C to stop
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.

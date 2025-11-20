@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBox - Hypervisor Sandbox</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>🔒 SafeBox</h1>
+                <p>Hypervisor Sandbox</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-section="cpu-monitor">
+                    <span class="icon">📊</span>
+                    <span>CPU Monitor</span>
+                </button>
+                <button class="nav-item" data-section="malware-detector">
+                    <span class="icon">🧪</span>
+                    <span>Malware Detector</span>
+                </button>
+                <button class="nav-item" data-section="sandbox-test">
+                    <span class="icon">🎯</span>
+                    <span>Test Samples</span>
+                </button>
+                <button class="nav-item" data-section="kvm-sandbox">
+                    <span class="icon">🖥️</span>
+                    <span>KVM Sandbox</span>
+                </button>
+                <button class="nav-item" data-section="alerts">
+                    <span class="icon">🚨</span>
+                    <span>Alerts & Logs</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusLabel">Stopped</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- CPU Monitor Section -->
+            <section id="cpu-monitor" class="section active">
+                <div class="section-header">
+                    <h2>📊 CPU Monitor</h2>
+                    <p>Monitor and auto-terminate high CPU processes</p>
+                </div>
+
+                <div class="control-panel">
+                    <div class="input-group">
+                        <label for="cpuThreshold">CPU Threshold (%):</label>
+                        <input type="number" id="cpuThreshold" min="1" max="100" value="30">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="checkInterval">Check Interval (seconds):</label>
+                        <input type="number" id="checkInterval" min="0.5" max="60" value="2" step="0.5">
+                    </div>
+
+                    <button id="startBtn" class="btn btn-primary">Start Monitoring</button>
+                    <button id="stopBtn" class="btn btn-danger" disabled>Stop Monitoring</button>
+                </div>
+
+                <!-- Status -->
+                <div class="status-section">
+                    <div class="status-card">
+                        <span id="statusText">⏹️ Stopped</span>
+                        <span id="statusTime"></span>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-section">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Processes</div>
+                        <div class="stat-value" id="totalProcesses">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">High CPU Processes</div>
+                        <div class="stat-value" id="highCpuCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Killed Today</div>
+                        <div class="stat-value" id="killedCount">0</div>
+                    </div>
+                </div>
+
+                <!-- Process List -->
+                <div class="processes-section">
+                    <h3>Running Processes</h3>
+                    <div id="processList" class="process-list">
+                        <p class="empty-message">Click "Start Monitoring" to begin</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Malware Detector Section -->
+            <section id="malware-detector" class="section">
+                <div class="section-header">
+                    <h2>🧪 Malware Detector</h2>
+                    <p>Real-time detection and automatic termination</p>
+                </div>
+
+                <div class="detector-controls">
+                    <div class="toggle-group">
+                        <label>
+                            <input type="checkbox" id="autoDetect" checked>
+                            <span>Auto-Detect & Terminate</span>
+                        </label>
+                    </div>
+                    <div class="toggle-group">
+                        <label>
+                            <input type="checkbox" id="sandboxAll">
+                            <span>Sandbox All New Processes</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Detection Stats -->
+                <div class="detection-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Threats Detected</div>
+                        <div class="stat-value" id="threatsDetected">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Threats Terminated</div>
+                        <div class="stat-value" id="threatsTerminated">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Detection Rate</div>
+                        <div class="stat-value" id="detectionRate">0%</div>
+                    </div>
+                </div>
+
+                <!-- Threats List -->
+                <div class="threats-section">
+                    <h3>Detected Threats</h3>
+                    <div id="threatsList" class="threats-list">
+                        <p class="empty-message">No threats detected</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Test Samples Section -->
+            <section id="sandbox-test" class="section">
+                <div class="section-header">
+                    <h2>🎯 Test Malware Samples</h2>
+                    <p>Test behavior detection with sample malware</p>
+                </div>
+
+                <div class="test-controls">
+                    <div class="control-group">
+                        <label for="sampleSelect">Select Test Sample:</label>
+                        <select id="sampleSelect">
+                            <option value="">-- Choose a sample --</option>
+                        </select>
+                    </div>
+                    <button id="runTestBtn" class="btn btn-warning">Run in Sandbox</button>
+                    <button id="refreshSamplesBtn" class="btn btn-small">Refresh Samples</button>
+                </div>
+
+                <!-- Sample Info -->
+                <div id="sampleInfo" class="sample-info" style="display:none;">
+                    <div class="info-row">
+                        <span class="label">Name:</span>
+                        <span id="sampleName">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Behavior:</span>
+                        <span id="sampleBehavior">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Severity:</span>
+                        <span id="sampleSeverity" class="severity-badge">-</span>
+                    </div>
+                </div>
+
+                <!-- Test Results -->
+                <div id="testResults" class="test-results" style="display:none;">
+                    <h3>Test Execution Results</h3>
+                    <div class="result-item">
+                        <span class="label">Sandbox ID:</span>
+                        <span id="resultSandboxId" class="code">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Return Code:</span>
+                        <span id="resultReturnCode">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">CPU Used:</span>
+                        <span id="resultCpu">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Memory Used:</span>
+                        <span id="resultMemory">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Processes:</span>
+                        <span id="resultProcesses">-</span>
+                    </div>
+                </div>
+
+                <!-- Samples List -->
+                <div class="samples-list">
+                    <h3>Available Test Samples</h3>
+                    <div id="samplesList" class="samples-grid">
+                        <p class="loading">Loading samples...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KVM Sandbox Section -->
+            <section id="kvm-sandbox" class="section">
+                <div class="section-header">
+                    <h2>🖥️ KVM Hypervisor Sandbox</h2>
+                    <p>Enterprise-grade VM-based malware analysis</p>
+                </div>
+
+                <!-- KVM Status -->
+                <div class="kvm-status-panel">
+                    <div class="status-card">
+                        <span class="label">KVM Status:</span>
+                        <span id="kvmStatus" class="status-badge" style="background-color: #ef4444;">Checking...</span>
+                    </div>
+                    <div class="status-card">
+                        <span class="label">Active VMs:</span>
+                        <span id="activeVMs" class="stat-value">0</span>
+                    </div>
+                    <div class="status-card">
+                        <span class="label">Total VMs:</span>
+                        <span id="totalVMs" class="stat-value">0</span>
+                    </div>
+                </div>
+
+                <!-- VM Management Controls -->
+                <div class="kvm-controls">
+                    <div class="control-group">
+                        <label for="vmName">VM Name:</label>
+                        <input type="text" id="vmName" placeholder="SafeBox-VM-1" value="SafeBox-VM-1">
+                    </div>
+                    <div class="control-group">
+                        <label for="vmCpus">CPU Cores:</label>
+                        <input type="number" id="vmCpus" min="1" max="8" value="2">
+                    </div>
+                    <div class="control-group">
+                        <label for="vmMemory">Memory (MB):</label>
+                        <input type="number" id="vmMemory" min="256" max="4096" value="512" step="256">
+                    </div>
+                    <button id="createVmBtn" class="btn btn-success">Create VM</button>
+                    <button id="refreshVmBtn" class="btn btn-small">Refresh VMs</button>
+                </div>
+
+                <!-- VMs List -->
+                <div class="vms-section">
+                    <h3>Virtual Machines</h3>
+                    <div id="vmsList" class="vms-grid">
+                        <p class="empty-message">No VMs created yet</p>
+                    </div>
+                </div>
+
+                <!-- VM Execution -->
+                <div class="vm-execution-section">
+                    <h3>Execute Malware in VM</h3>
+                    <div class="execution-controls">
+                        <div class="control-group">
+                            <label for="targetVm">Select VM:</label>
+                            <select id="targetVm">
+                                <option value="">-- No VMs available --</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="vmMalware">Malware Sample:</label>
+                            <select id="vmMalware">
+                                <option value="">-- Loading samples --</option>
+                            </select>
+                        </div>
+                        <button id="executeInVmBtn" class="btn btn-warning">Execute in VM</button>
+                    </div>
+
+                    <!-- Execution Results -->
+                    <div id="vmExecutionResults" class="execution-results" style="display:none;">
+                        <h4>Execution Results</h4>
+                        <div class="result-item">
+                            <span class="label">VM:</span>
+                            <span id="vmExecVmName">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Malware:</span>
+                            <span id="vmExecMalwareName">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Duration:</span>
+                            <span id="vmExecDuration">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Status:</span>
+                            <span id="vmExecStatus">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Output:</span>
+                            <span id="vmExecOutput" class="code">-</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alerts & Logs Section -->
+            <section id="alerts" class="section">
+                <div class="section-header">
+                    <h2>🚨 Alerts & Activity Log</h2>
+                    <p>All system events and detections</p>
+                </div>
+
+                <div class="logs-section">
+                    <div id="logContainer" class="logs">
+                        <p class="log-empty">Waiting for activity...</p>
+                    </div>
+                    <button id="clearLogsBtn" class="btn btn-small">Clear Logs</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="monitor.js"></script>
+</body>
+
+</html>
